@@ -20,6 +20,8 @@ public class SecurityConfig {
                             .requestMatchers("/tasteloop/restaurant/**").permitAll()
                             .requestMatchers("/tasteloop/fooditem/**").permitAll()
                             .requestMatchers("/tasteloop/cart/**").permitAll()
+                            .requestMatchers("/tasteloop/payments/**").permitAll()
+                            .requestMatchers("/tasteloop/orders/**").permitAll()
                     .anyRequest().authenticated());
 
 

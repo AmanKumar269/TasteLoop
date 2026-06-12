@@ -13,11 +13,11 @@ import com.jsp.tasteloop.user_module.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-
 @Service
 @RequiredArgsConstructor
-public class CartServiceImpl implements CartService{
+public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final UserRepository userRepository;
     private final FoodItemRepository foodItemRepository;
@@ -30,15 +30,12 @@ public class CartServiceImpl implements CartService{
         FoodItem foodItem = foodItemRepository.findById(cartRequest.getFoodItemId().intValue())
                 .orElseThrow(() -> new RuntimeException("Food Item not found"));
 
-
-        Cart cart = cartRepository.findByUser(user)
-                .orElse(null);
-
+        Cart cart = cartRepository.findByUser(user).orElse(null);
 
         if (cart == null) {
             cart = new Cart();
             cart.setUser(user);
-            cart.setItems(new java.util.ArrayList<>());
+            cart.setItems(new ArrayList<>());
             cart.setTotalPrice(0.0);
         }
 
@@ -50,24 +47,14 @@ public class CartServiceImpl implements CartService{
         cartItem.setCategory(foodItem.getCategory());
         cartItem.setQuantity(1);
 
-
+        cartItem.setCart(cart);
         cart.getItems().add(cartItem);
-
 
         cart.setTotalPrice(cart.getTotalPrice() + foodItem.getPrice());
 
         Cart savedCart = cartRepository.save(cart);
 
-        CartResponse response = new CartResponse();
-        response.setFoodName(cartItem.getFoodName());
-        response.setDescription(cartItem.getDescription());
-        response.setPrice(cartItem.getPrice());
-        response.setCategory(cartItem.getCategory());
-        response.setQuantity(cartItem.getQuantity());
-        response.setTotalPrice(savedCart.getTotalPrice());
-        response.setItems(savedCart.getItems());
-
-        return response;
+        return buildResponse(savedCart);
     }
 
     @Override
@@ -79,22 +66,7 @@ public class CartServiceImpl implements CartService{
         Cart cart = cartRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
 
-        CartResponse response = new CartResponse();
-
-        if (!cart.getItems().isEmpty()) {
-            CartItem item = cart.getItems().get(0);
-
-            response.setFoodName(item.getFoodName());
-            response.setDescription(item.getDescription());
-            response.setPrice(item.getPrice());
-            response.setCategory(item.getCategory());
-            response.setQuantity(item.getQuantity());
-        }
-
-        response.setTotalPrice(cart.getTotalPrice());
-        response.setItems(cart.getItems());
-
-        return response;
+        return buildResponse(cart);
     }
 
     @Override
@@ -108,7 +80,6 @@ public class CartServiceImpl implements CartService{
 
         Cart cart = cartRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
-
 
         CartItem existingItem = null;
 
@@ -131,24 +102,13 @@ public class CartServiceImpl implements CartService{
             cartItem.setCategory(foodItem.getCategory());
             cartItem.setQuantity(1);
 
+            cartItem.setCart(cart);
             cart.getItems().add(cartItem);
         }
 
-        double total = 0.0;
+        recalcTotal(cart);
 
-        for (CartItem item : cart.getItems()) {
-            total += item.getPrice() * item.getQuantity();
-        }
-
-        cart.setTotalPrice(total);
-
-        Cart savedCart = cartRepository.save(cart);
-
-        CartResponse response = new CartResponse();
-        response.setItems(savedCart.getItems());
-        response.setTotalPrice(savedCart.getTotalPrice());
-
-        return response;
+        return buildResponse(cartRepository.save(cart));
     }
 
     @Override
@@ -163,37 +123,16 @@ public class CartServiceImpl implements CartService{
         Cart cart = cartRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
 
-        CartItem targetItem = null;
+        CartItem item = findItem(cart, foodItem.getId().longValue());
 
-        for (CartItem item : cart.getItems()) {
-            if (item.getFoodItemId().equals(foodItem.getId().longValue())) {
-                targetItem = item;
-                break;
-            }
-        }
+        item.setQuantity(item.getQuantity() + 1);
 
-        if (targetItem == null) {
-            throw new RuntimeException("Item not found in cart");
-        }
+        recalcTotal(cart);
 
-        targetItem.setQuantity(targetItem.getQuantity() + 1);
-
-        double total = 0.0;
-
-        for (CartItem item : cart.getItems()) {
-            total += item.getPrice() * item.getQuantity();
-        }
-
-        cart.setTotalPrice(total);
-
-        Cart savedCart = cartRepository.save(cart);
-
-        CartResponse response = new CartResponse();
-        response.setItems(savedCart.getItems());
-        response.setTotalPrice(savedCart.getTotalPrice());
-
-        return response;
+        return buildResponse(cartRepository.save(cart));
     }
+
+
     @Override
     public CartResponse decreaseItemQuantity(CartRequest cartRequest) {
 
@@ -206,28 +145,27 @@ public class CartServiceImpl implements CartService{
         Cart cart = cartRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
 
-        CartItem targetItem = null;
+        CartItem item = findItem(cart, foodItem.getId().longValue());
 
-        for (CartItem item : cart.getItems()) {
-            if (item.getFoodItemId().equals(foodItem.getId().longValue())) {
-                targetItem = item;
-                break;
-            }
-        }
-
-        if (targetItem == null) {
-            throw new RuntimeException("Item not found in cart");
-        }
-
-        int qty = targetItem.getQuantity();
-
-        if (qty > 1) {
-            targetItem.setQuantity(qty - 1);
+        if (item.getQuantity() > 1) {
+            item.setQuantity(item.getQuantity() - 1);
         } else {
-
-            cart.getItems().remove(targetItem);
+            cart.getItems().remove(item);
         }
+        recalcTotal(cart);
 
+        return buildResponse(cartRepository.save(cart));
+    }
+
+
+    private CartItem findItem(Cart cart, Long foodItemId) {
+        return cart.getItems().stream()
+                .filter(i -> i.getFoodItemId().equals(foodItemId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Item not found in cart"));
+    }
+
+    private void recalcTotal(Cart cart) {
         double total = 0.0;
 
         for (CartItem item : cart.getItems()) {
@@ -235,13 +173,12 @@ public class CartServiceImpl implements CartService{
         }
 
         cart.setTotalPrice(total);
-
-        Cart savedCart = cartRepository.save(cart);
-
+    }
+    private CartResponse buildResponse(Cart cart) {
         CartResponse response = new CartResponse();
-        response.setItems(savedCart.getItems());
-        response.setTotalPrice(savedCart.getTotalPrice());
-
+        response.setItems(cart.getItems());
+        response.setTotalPrice(cart.getTotalPrice());
+        response.setQuantity(cart.getItems().size());
         return response;
     }
 }

@@ -13,12 +13,8 @@ import java.util.List;
 public class CartResponse {
 
     private Integer quantity;
-    private Double price;
-    private String foodName;
-    private String description;
-    private String imageUrl;
+
     @Enumerated(EnumType.STRING)
-    private Category category;
     private double totalPrice;
     private List<CartItem> items;
 }

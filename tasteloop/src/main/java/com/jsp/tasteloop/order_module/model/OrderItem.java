@@ -1,32 +1,26 @@
-package com.jsp.tasteloop.cart_module.model;
+package com.jsp.tasteloop.order_module.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.jsp.tasteloop.restaurant_module.model.Category;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Entity
 @Getter
 @Setter
-@Entity
-@AllArgsConstructor
 @NoArgsConstructor
-public class CartItem {
+@AllArgsConstructor
+public class OrderItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long cartItemId;
+    private Long orderItemId;
     private Long foodItemId;
     private Integer quantity;
     private Double price;
-    private String foodName;
-    private String description;
-    @Enumerated(EnumType.STRING)
-    private Category category;
-    private String imageUrl;
     @JsonIgnore
     @ManyToOne
-    @JoinColumn(name = "cart_id")
-    private Cart cart;
+    @JoinColumn(name = "order_id")
+    private Order order;
 }
