@@ -1,107 +1,177 @@
-TasteLoop
+# TasteLoop 
 
-TasteLoop is a food ordering backend built with Spring Boot. It's basically a mini version of how apps like Zomato/Swiggy work under the hood — restaurants can list their food items, customers can add items to a cart, place an order, and make a payment for it.
+TasteLoop is a **food ordering backend application** built using **Java and Spring Boot**.
 
-I built this to get hands-on with a proper multi-module Spring Boot project (instead of a single flat package) and to practice JWT-based auth, JPA relationships, and REST API design.
+I created this project to practice building REST APIs, working with Spring Boot, JPA relationships, authentication, and PostgreSQL.
 
-What it does
-User registration/login with role-based access (Customer, Admin, Hotel Owner)
-Restaurants can be created and managed by an owner/manager
-Food items can be added to a restaurant, with stock tracking and veg/non-veg category
-Cart system — add items, increase/decrease quantity, view cart by user
-Order placement from cart items
-Payment processing linked to an order (supports multiple payment methods)
-Modules
+## Features
 
-The project is split into feature-based modules instead of one giant package:
+* User registration and login
+* JWT-based authentication
+* Role-based access for users
+* Restaurant management
+* Add and manage food items
+* Veg / Non-Veg food category
+* Food stock management
+* Cart management
+* Add items to cart
+* Increase / decrease cart quantity
+* Place orders
+* Payment processing
+* User profile management
+* Change password
 
+## Project Modules
+
+The project is divided into different modules based on functionality:
+
+```text
 com.jsp.tasteloop
-├── user_module        # registration, login, profile, JWT auth
-├── restaurant_module   # restaurant + food item management
-├── cart_module         # cart and cart items
-├── order_module        # order placement and order items
-├── payment_module      # payment processing
-└── common_module       # security config, exception handling
+│
+├── user_module
+├── restaurant_module
+├── cart_module
+├── order_module
+├── payment_module
+└── common_module
+```
 
-Each module follows the same pattern internally: controller -> service -> dao -> model/dto.
+Each module mainly contains:
 
-Tech Stack
-Java + Spring Boot 4
-Spring Data JPA (Hibernate)
-Spring Security + JWT
-PostgreSQL
-Lombok
-SpringDoc OpenAPI (Swagger UI)
-Maven
-API Overview
-User (/tasteloop/user)
-Method	Endpoint	Description
-POST	/register	Register a new user
-POST	/login	Login and get JWT token
-GET	/profile?id=	Get user profile
-PUT	/changepassword	Change password
-DELETE	/delete?id=	Delete a user
-Restaurant (/tasteloop/restaurant)
-Method	Endpoint	Description
-POST	/create	Create a restaurant
-GET	/all	Get all restaurants
-GET	/location	Search restaurants by location
-GET	/name	Search restaurants by name
-GET	/{restaurantId}	Get restaurant by id
-PUT	/updateManager	Update restaurant manager
-Food Item (/tasteloop/fooditem)
-Method	Endpoint	Description
-POST	/add	Add a food item to a restaurant
-PUT	/update-stock/{foodItemId}	Update stock for an item
-GET	/food-items	List food items
-Cart (/tasteloop/cart)
-Method	Endpoint	Description
-POST	/createcart	Create a cart for a user
-GET	/user/{userId}	Get a user's cart
-POST	/add-item	Add item to cart
-POST	/increase-quantity	Increase item quantity
-POST	/decrease-quantity	Decrease item quantity
-Order (/tasteloop/orders)
-Method	Endpoint	Description
-POST	/{userId}	Place an order from the user's cart
-Payment (/tasteloop/payments)
-Method	Endpoint	Description
-POST	/process	Process payment for an order
+```text
+Controller → Service → DAO → Model / DTO
+```
 
-Full request/response schemas are available via Swagger once the app is running.
+## Technologies Used
 
-Running it locally
+* **Java**
+* **Spring Boot**
+* **Spring Data JPA / Hibernate**
+* **Spring Security**
+* **JWT**
+* **PostgreSQL**
+* **Lombok**
+* **Maven**
+* **Swagger / SpringDoc OpenAPI**
 
-1. Clone the repo
+## Main APIs
 
-bash
+### User
+
+| Method | Endpoint                         | Description      |
+| ------ | -------------------------------- | ---------------- |
+| POST   | `/tasteloop/user/register`       | Register user    |
+| POST   | `/tasteloop/user/login`          | Login            |
+| GET    | `/tasteloop/user/profile`        | Get user profile |
+| PUT    | `/tasteloop/user/changepassword` | Change password  |
+| DELETE | `/tasteloop/user/delete`         | Delete user      |
+
+### Restaurant
+
+| Method | Endpoint                               | Description               |
+| ------ | -------------------------------------- | ------------------------- |
+| POST   | `/tasteloop/restaurant/create`         | Create restaurant         |
+| GET    | `/tasteloop/restaurant/all`            | Get all restaurants       |
+| GET    | `/tasteloop/restaurant/location`       | Search by location        |
+| GET    | `/tasteloop/restaurant/name`           | Search by name            |
+| GET    | `/tasteloop/restaurant/{restaurantId}` | Get restaurant by ID      |
+| PUT    | `/tasteloop/restaurant/updateManager`  | Update restaurant manager |
+
+### Food Item
+
+| Method | Endpoint                                        | Description    |
+| ------ | ----------------------------------------------- | -------------- |
+| POST   | `/tasteloop/fooditem/add`                       | Add food item  |
+| PUT    | `/tasteloop/fooditem/update-stock/{foodItemId}` | Update stock   |
+| GET    | `/tasteloop/fooditem/food-items`                | Get food items |
+
+### Cart
+
+| Method | Endpoint                            | Description       |
+| ------ | ----------------------------------- | ----------------- |
+| POST   | `/tasteloop/cart/createcart`        | Create cart       |
+| GET    | `/tasteloop/cart/user/{userId}`     | Get user's cart   |
+| POST   | `/tasteloop/cart/add-item`          | Add item to cart  |
+| POST   | `/tasteloop/cart/increase-quantity` | Increase quantity |
+| POST   | `/tasteloop/cart/decrease-quantity` | Decrease quantity |
+
+### Order
+
+| Method | Endpoint                     | Description |
+| ------ | ---------------------------- | ----------- |
+| POST   | `/tasteloop/orders/{userId}` | Place order |
+
+### Payment
+
+| Method | Endpoint                      | Description     |
+| ------ | ----------------------------- | --------------- |
+| POST   | `/tasteloop/payments/process` | Process payment |
+
+## Database
+
+The project uses **PostgreSQL**.
+
+Create the database:
+
+```sql
+CREATE DATABASE tasteloop_db;
+```
+
+Then update the database username and password in:
+
+```text
+src/main/resources/application.properties
+```
+
+## How to Run
+
+### 1. Clone the repository
+
+```bash
 git clone https://github.com/AmanKumar269/TasteLoop.git
 cd TasteLoop/tasteloop
+```
 
-2. Set up PostgreSQL
+### 2. Configure PostgreSQL
 
-Create a database named tasteloop_db:
+Create the `tasteloop_db` database and update your PostgreSQL credentials in `application.properties`.
 
-sql
-CREATE DATABASE tasteloop_db;
+### 3. Run the application
 
-Update credentials in src/main/resources/application.properties if your Postgres username/password isn't postgres / root.
-
-3. Run the app
-
-bash
+```bash
 ./mvnw spring-boot:run
+```
 
-The app starts on http://localhost:8080.
+The application will start on:
 
-4. Check the APIs
+```text
+http://localhost:8080
+```
 
-Swagger UI: http://localhost:8080/swagger-ui.html
+## Swagger
 
-Notes
-JWT secret and expiry are configured in application.properties — change the secret before deploying anywhere real.
-spring.jpa.hibernate.ddl-auto=update is used for now, so tables get auto-created/updated on startup. Fine for dev, not something I'd use in production.
-This is still a work in progress — things like order status updates, restaurant reviews, and better error responses are on my to-do list.
-License
+After starting the application, API documentation can be accessed through Swagger:
 
-Open for learning/personal use.
+```text
+http://localhost:8080/swagger-ui.html
+```
+
+Swagger can be used to test the available REST APIs.
+
+## What I Learned
+
+While working on TasteLoop, I practiced:
+
+* Building REST APIs using Spring Boot
+* Spring Security and JWT authentication
+* JPA entity relationships
+* PostgreSQL database integration
+* CRUD operations
+* Cart and order logic
+* Exception handling
+* Project structure using multiple modules
+* API testing using Swagger
+
+## Note
+
+This project is mainly built for **learning and practice**. Some features can still be improved, such as order status management, restaurant reviews, and better error handling.
